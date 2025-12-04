@@ -32,13 +32,43 @@ class LLMService:
             "stream": stream
         }
         
+        print(f"调用LLM API: {self.base_url}")
+        print(f"模型: {self.model_name}, 消息数量: {len(messages)}")
+        
         async with httpx.AsyncClient(timeout=60.0) as client:
             try:
                 response = await client.post(self.base_url, headers=headers, json=data)
-                response.raise_for_status()
+                print(f"API响应状态码: {response.status_code}")
+                
+                if response.status_code != 200:
+                    error_detail = ""
+                    try:
+                        error_detail = response.json()
+                    except:
+                        error_detail = response.text[:500]  # 限制长度
+                    print(f"API错误详情: {error_detail}")
+                    raise Exception(f"LLM API调用失败 (状态码: {response.status_code}): {error_detail}")
+                
                 result = response.json()
+                
+                # 检查响应格式
+                if "choices" not in result or len(result["choices"]) == 0:
+                    raise Exception(f"API响应格式异常: {result}")
+                
                 return result["choices"][0]["message"]["content"].strip()
+            except httpx.HTTPStatusError as e:
+                error_detail = ""
+                try:
+                    error_detail = e.response.json()
+                except:
+                    error_detail = e.response.text[:500]
+                print(f"HTTP错误: {error_detail}")
+                raise Exception(f"LLM API调用失败 (状态码: {e.response.status_code}): {error_detail}")
+            except httpx.RequestError as e:
+                print(f"请求错误: {e}")
+                raise Exception(f"LLM API请求失败: {str(e)}")
             except Exception as e:
+                print(f"其他错误: {e}")
                 raise Exception(f"LLM API调用失败: {str(e)}")
 
     def format_legal_prompt(

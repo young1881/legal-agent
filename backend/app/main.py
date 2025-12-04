@@ -18,10 +18,11 @@ async def lifespan(app: FastAPI):
     global consultant_agent, vector_store
     print("正在初始化服务...")
     vector_store = VectorStore()
-    consultant_agent = LegalConsultantAgent()
     print("正在加载测试数据...")
     load_sample_data(vector_store)
     print("测试数据加载完成")
+    # 使用已加载数据的vector_store创建agent
+    consultant_agent = LegalConsultantAgent(vector_store=vector_store)
     yield
     # 关闭时（如果需要清理资源）
 
@@ -60,8 +61,13 @@ async def chat(request: ChatRequest):
         else:
             # 其他Agent类型可以在这里扩展
             raise HTTPException(status_code=400, detail=f"不支持的Agent类型: {request.agent_type}")
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"API错误详情:\n{error_detail}")
+        raise HTTPException(status_code=500, detail=f"服务器错误: {str(e)}")
 
 @app.get("/api/search")
 async def search(query: str, top_k: int = 5):

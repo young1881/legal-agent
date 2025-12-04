@@ -5,9 +5,13 @@ from app.services.vector_store import VectorStore
 from app.models.schemas import Citation, ChatResponse
 
 class LegalConsultantAgent:
-    def __init__(self):
+    def __init__(self, vector_store: VectorStore = None):
         self.llm_service = LLMService()
-        self.vector_store = VectorStore()
+        # 使用传入的vector_store，如果没有则创建新的（向后兼容）
+        if vector_store is not None:
+            self.vector_store = vector_store
+        else:
+            self.vector_store = VectorStore()
 
     async def process_query(self, question: str) -> ChatResponse:
         """处理法律咨询查询"""
@@ -36,13 +40,22 @@ class LegalConsultantAgent:
         ]
         
         # 3. 调用LLM生成回答
-        messages = self.llm_service.format_legal_prompt(
-            question=question,
-            context_chunks=context_chunks,
-            agent_type="consultant"
-        )
-        
-        answer = await self.llm_service.chat(messages, temperature=0.3)
+        try:
+            messages = self.llm_service.format_legal_prompt(
+                question=question,
+                context_chunks=context_chunks,
+                agent_type="consultant"
+            )
+            print(f"正在调用LLM API生成回答...")
+            answer = await self.llm_service.chat(messages, temperature=0.3)
+            print(f"✓ LLM回答生成完成")
+        except Exception as e:
+            print(f"✗ LLM调用失败: {e}")
+            # 如果LLM调用失败，返回基于检索结果的简单回答
+            answer = f"根据检索到的法律条文，我找到以下相关信息：\n\n"
+            for i, result in enumerate(search_results[:3], 1):
+                answer += f"{i}. {result['article_name']} {result.get('section', '')}：{result['content'][:100]}...\n\n"
+            answer += f"\n[来源: {search_results[0].get('source_id', '')}]"
         
         # 4. 提取引用
         citations = self._extract_citations(answer, search_results)
