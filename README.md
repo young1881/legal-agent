@@ -89,36 +89,51 @@ npm run dev
 
 ```
 legal-agent/
-├── backend/
+├── backend/                    # 后端服务
 │   ├── app/
-│   │   ├── agents/          # Agent实现
-│   │   ├── models/          # 数据模型
-│   │   ├── services/        # 核心服务
-│   │   └── main.py         # FastAPI入口
-│   └── requirements.txt
-├── frontend/
-│   ├── app/                 # Next.js页面
-│   ├── components/          # React组件
+│   │   ├── agents/            # Agent实现
+│   │   │   ├── legal_consultant.py    # 法律咨询Agent
+│   │   │   ├── exam_generator.py      # 出题Agent (待实现)
+│   │   │   └── chat_agent.py          # 通用对话Agent (待实现)
+│   │   ├── models/            # 数据模型
+│   │   │   └── schemas.py     # Pydantic模型定义
+│   │   ├── services/          # 核心服务
+│   │   │   ├── llm_service.py         # LLM API服务
+│   │   │   ├── embedding_service.py  # 文本嵌入服务
+│   │   │   ├── vector_store.py       # 向量数据库服务
+│   │   │   ├── rerank_service.py     # 重排序服务 (待实现)
+│   │   │   ├── cache_service.py      # 缓存服务 (待实现)
+│   │   │   └── data_loader.py        # 数据加载
+│   │   ├── api/               # API路由 (待重构)
+│   │   ├── middleware/         # 中间件 (待实现)
+│   │   └── main.py            # FastAPI入口
+│   ├── tests/                 # 测试文件
+│   ├── requirements.txt       # Python依赖
+│   └── .env.example          # 环境变量示例
+├── frontend/                  # 前端应用
+│   ├── app/                   # Next.js页面
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── api/               # API路由 (待实现)
+│   ├── components/            # React组件
+│   │   ├── ChatInterface.tsx
+│   │   ├── MessageBubble.tsx
+│   │   ├── CitationPanel.tsx
+│   │   └── ui/                # UI组件库
+│   ├── lib/                   # 工具函数
 │   └── package.json
-└── README.md
+├── docs/                      # 文档 (待创建)
+│   ├── architecture.md        # 架构设计文档
+│   ├── api.md                 # API文档
+│   └── deployment.md          # 部署文档
+├── docker/                    # Docker配置 (待创建)
+│   ├── Dockerfile.backend
+│   ├── Dockerfile.frontend
+│   └── docker-compose.yml
+└── README.md                  # 项目说明
 ```
-
-## 测试数据
-
-系统已包含示例法律条文和案例：
-- 《中华人民共和国刑法》相关条文
-- 《中华人民共和国民法典》相关条文
-- 典型案例
-
-## 开发计划
-
-- [ ] 实现出题Agent
-- [ ] 添加文档上传功能
-- [ ] 实现语义缓存
-- [ ] 添加重排序模型
-- [ ] 优化前端UI
 
 ## 许可证
 
-MIT
+MIT License
 
